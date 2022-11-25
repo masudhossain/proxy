@@ -5,13 +5,17 @@
 #   gem 'sqlite3'
 #
 default: &default
-  adapter: sqlite3
-  pool: 5
-  timeout: 5000
+  adapter: postgresql
+  encoding: unicode
+  template: template0
 
 development:
   <<: *default
-  database: db/development.sqlite3
+  database: defaultdb
+  username: doadmin
+  password: AVNS_iM1XZeVRA1F5SGiHLo6
+  host: proxy-database-do-user-12961362-0.b.db.ondigitalocean.com
+  port: 25060
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -22,4 +26,8 @@ test:
 
 production:
   <<: *default
-  database: db/production.sqlite3
+  database: defaultdb
+  username: doadmin
+  password: AVNS_iM1XZeVRA1F5SGiHLo6
+  host: proxy-database-do-user-12961362-0.b.db.ondigitalocean.com
+  port: 25060
