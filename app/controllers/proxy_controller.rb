@@ -7,13 +7,11 @@ class ProxyController < ApplicationController
     # DIDNT WORK IN PROD
     # site_url =  request.env["REQUEST_URI"][0..request.env["REQUEST_URI"].index("/proxy")-1] # prefix i.e. "http://localhost:3000"
     
-    # if request.env["REQUEST_URI"].index("http://localhost")
-      #Developer URL
+    if Rails.env.development?
       site_url = "http://localhost:3000/proxy"
-    # else
-    #   #Production URL
-    #   site_url = "http://webproxy.heroku.com/proxy"
-    # end
+    else
+      site_url = "http://2kqo.hatchboxapp.com/proxy"
+    end
         
     # INSERT START
 
