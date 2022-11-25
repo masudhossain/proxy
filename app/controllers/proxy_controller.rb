@@ -10,7 +10,7 @@ class ProxyController < ApplicationController
     if Rails.env.development?
       site_url = "http://localhost:3000/proxy"
     else
-      site_url = "http://2kqo.hatchboxapp.com/proxy"
+      site_url = "http://proxysite.usequeue.com/proxy"
     end
         
     # INSERT START
@@ -379,7 +379,7 @@ class ProxyController < ApplicationController
     @finaldoc = cleaned
     # INSERT END
 
-    # @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
+    @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
     render :layout => false
   end
 end
