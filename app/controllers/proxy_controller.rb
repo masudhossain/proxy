@@ -164,8 +164,13 @@ class ProxyController < ApplicationController
           
                     
           # TEST = http://www.cs.unc.edu/~jbs/resources/perl/perl-cgi/programs/form1-POST.html
-          page = a.post(@url, eval("{" + paramsstring.chop.chop + "}")) 
-          @rawdoc = page.body
+
+          begin 
+            page = a.post(@url, params)
+            @rawdoc = page.body
+          
+          end 
+         
 
       end
           
@@ -182,8 +187,10 @@ class ProxyController < ApplicationController
           a.get(@url) do |page| 
             @rawdoc =  page.body 
           end    
-        rescue
-          @rawdoc = "Page not found"
+        rescue =>e
+          @rawdoc = e.page.body
+          puts "===>errpr"
+          puts e.page.header
         end
       end
 
@@ -379,7 +386,7 @@ class ProxyController < ApplicationController
     @finaldoc = cleaned
     # INSERT END
 
-    @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
+    # @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
     render :layout => false
   end
 end
