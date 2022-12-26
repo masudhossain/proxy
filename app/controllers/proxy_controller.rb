@@ -1,6 +1,6 @@
 
 class ProxyController < ApplicationController
-
+  require 'uri'
   
   def proxy
     
@@ -168,7 +168,7 @@ class ProxyController < ApplicationController
           begin 
             page = a.post(@url, params)
             @rawdoc = page.body
-          
+
           end 
          
 
@@ -246,7 +246,11 @@ class ProxyController < ApplicationController
               link = @baseurl
             else
               if @baseurl[@baseurl.length..@baseurl.length] == '/' or a['src'][0..0] == "/"
-                link = @baseurl + a['src']
+                if a['src'].start_with?("//") 
+                  link = a['src']
+                else
+                  link = @baseurl + a['src']
+                end
               else
                 link = @baseurl + '/' + a['src']
               end
@@ -274,31 +278,32 @@ class ProxyController < ApplicationController
 
     # MANIPULATE HTML CONTENT IMAGES TO USE ACTUAL LINKS INCLUDING RELATIVE LINKS
     @doc.xpath('//link').each { |a|
-
-        if a['href'] != nil
-
-          if a['href'].index('http://') == nil and a['href'].index('https://') == nil
-            if a['href'] == "/"
-              link = @baseurl
-            else
-              if @baseurl[@baseurl.length..@baseurl.length] == '/' or a['href'][0..0] == "/"
-                link = @baseurl + a['href']
-              else
-                link = @baseurl + '/' + a['href']
-              end
-            end
+      if a['href'] != nil
+        if a['href'].index('http://') == nil and a['href'].index('https://') == nil
+          if a['href'] == "/"
+            link = @baseurl
           else
-            link = a['href']
+            if (@baseurl[@baseurl.length..@baseurl.length] == '/' or a['href'][0..0] == "/") 
+              if a['href'].start_with?("//")
+                link = a['href'] 
+              else
+                link = @baseurl + a['href']
+              end
+            else
+              link = @baseurl + '/' + a['href']
+            end
           end
-
-          link.gsub!("http:///", @baseurl) #added to test localhost entries
-
-          link = link.strip
-          # link = site_url + '?lnk=' + URI.escape(link.strip)
-          a['href'] = link
-          
+        else
+          link = a['href']
         end
-    } 
+
+        link.gsub!("http:///", @baseurl) #added to test localhost entries
+
+        link = link.strip
+        # link = site_url + '?lnk=' + URI.escape(link.strip)
+        a['href'] = link
+      end
+    }
 
       # MANIPULATE HTML CONTENT IMAGES TO USE ACTUAL LINKS INCLUDING RELATIVE LINKS
       @doc.xpath('//form').each { |a|
@@ -356,10 +361,14 @@ class ProxyController < ApplicationController
     @finaldoc = @doc.to_s 
         
     # #Check for any links that may be hiding in javascripts
-    @finaldoc.gsub("href='/", "href='" + site_url + "?url=" + @baseurl + "/")
+    # @finaldoc = @finaldoc.gsub(/href="\/\//, 'href="https://')
+    @finaldoc.gsub(/href="\/(?!\/)/, 'href="' + site_url + "?url=" + @baseurl + "/")
+    # @finaldoc.gsub("href='/", "href='" + site_url + "?url=" + @baseurl + "/")
     # 
     # #prepend baseurl on src tags in javascript
-    @finaldoc = @finaldoc.gsub('src="/', 'src="' + @baseurl + '/' ) 
+    # @finaldoc = @finaldoc.gsub(/src="\/\//, 'src="https://')
+    @finaldoc = @finaldoc.gsub(/src="\/(?!\/)/, 'src="' + @baseurl + '/')
+    # @finaldoc = @finaldoc.gsub('src="/', 'src="' + @baseurl + '/' ) 
     # 
     # #Why does Amazon care about Firefox browsers?
     @finaldoc = @finaldoc.gsub('Firefox', 'FirefoxWTF' ) 
@@ -386,8 +395,19 @@ class ProxyController < ApplicationController
     @finaldoc = cleaned
     # INSERT END
 
-    # @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
+    @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
     render :layout => false
   end
+
+  def test 
+    require 'open-uri'
+    fh = open("https://bootifulbidet.com")
+    @html = fh.read
+    render layout: false
+  end
+
+  def post 
+    # byebug
+  end 
 end
 
