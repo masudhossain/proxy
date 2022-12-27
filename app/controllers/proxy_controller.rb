@@ -1,14 +1,30 @@
-
 class ProxyController < ApplicationController
   require 'uri'
+
+  def index
+    require 'httparty'
+
+    # Set the proxy URL
+    proxy_url = "https://queue.ngrok.io"
+
+    # Make the HTTP request through the proxy
+    response = HTTParty.get("https://docs.rollbar.com/#{params[:path]}.#{params[:format]}", proxy: proxy_url)
+
+    # Output the response body
+    @body = response.body
+    if params[:format] == "js"
+      render js: @body
+    elsif params[:format] == "css"
+      render css: @body
+    end
+  end
   
   def proxy
-    
     # DIDNT WORK IN PROD
     # site_url =  request.env["REQUEST_URI"][0..request.env["REQUEST_URI"].index("/proxy")-1] # prefix i.e. "http://localhost:3000"
     
     if Rails.env.development?
-      site_url = "http://localhost:3000/proxy"
+      site_url = "http://queue.ngrok.io/proxy"
     else
       site_url = "http://proxysite.usequeue.com/proxy"
     end
@@ -168,7 +184,7 @@ class ProxyController < ApplicationController
           begin 
             page = a.post(@url, params)
             @rawdoc = page.body
-
+            
           end 
          
 
@@ -401,7 +417,7 @@ class ProxyController < ApplicationController
 
   def test 
     require 'open-uri'
-    fh = open("https://bootifulbidet.com")
+    fh = open("https://docs.rollbar.com/docs")
     @html = fh.read
     render layout: false
   end

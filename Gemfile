@@ -49,3 +49,5 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'nokogiri'
 gem 'mechanize'
 gem 'activerecord-session_store'#, github: 'rails/activerecord-session_store'
+gem 'httparty'
+gem 'rails_admin'#, '~> 3.0'
