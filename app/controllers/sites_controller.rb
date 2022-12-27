@@ -89,6 +89,7 @@ class SitesController < ApplicationController
 
 
       a = Mechanize.new { |agent|
+      # agent.request_headers = get_request_headers(request)
         agent.user_agent_alias = 'Mac Safari' #TODO pass user's browser type
         # User Agent aliases
           # AGENT_ALIASES = {
@@ -142,7 +143,9 @@ class SitesController < ApplicationController
           begin
             a.get(@url) do |page|
               @rawdoc =  page.body 
+              # response.headers= page.headers
             end
+            
           rescue
             a.cookie_jar.clear
             a.get(@url) do |page|
@@ -418,28 +421,7 @@ class SitesController < ApplicationController
       @finaldoc = cleaned
       # INSERT END
 
-      # @finaldoc = @finaldoc.gsub("</html>", "<script src='https://usequeue.com/queue_script.js'></script><link rel='stylesheet' href='https://usequeue.com/website_iframe_styles.css'></link></html>")
-
-      # @finaldoc = @finaldoc.gsub("</html>", "
-
-      #     <script>
-      #       window.addEventListener('load', function() {
-      #         setTimeout(function() {
-      #           console.log('5 seconds have passed');
-      #           // Select all `a` elements in the page
-      #           const links = document.querySelectorAll('a');
-
-      #           // Iterate over the collection and update the `href` attribute of links that meet the criteria
-      #           links.forEach(link => {
-      #           if (link.href.includes('localhost:3000') && !link.href.includes('proxy?lnk=')) {
-      #             link.href = link.href.replace('localhost:3000', 'localhost:3000/proxy?lnk=#{@baseurl}');
-      #           }
-      #         });
-      #         }, 1000);
-      #       });
-      #     </script>
-        
-      #   </html>")
+      @finaldoc = @finaldoc.gsub("</html>", "<script type='text/javascript' src='https://cdn.jsdelivr.net/gh/masudhossain/proxy-js@main/proxy.js'></script><link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/masudhossain/proxy-js@main/style.css'></link></html>")
       render :layout => false
     else
       # Since this is a JS/CSS or another weird type of file format, we will figure out what it is and then output that. 
@@ -463,6 +445,7 @@ class SitesController < ApplicationController
 
       # Output the response body
       @body = response.body
+      
       if params[:format] == "js"
         render js: @body
       elsif params[:format] == "css"
@@ -471,9 +454,17 @@ class SitesController < ApplicationController
     end
   end
 
+  def get_request_headers(request)
+    keys = request.env.keys.filter { |key| key.start_with?('HTTP') }
+    headers = request.env.slice(keys).transform_keys(&:downcase).transform_keys { |k| k.sub('http') }
+    headers['referer'] = "https://google.com"
+    headers
+  end
   def proxy 
     require 'httparty'
 
+    puts "REQUEST CAPTURED "
+    puts get_request_headers(request).inspect
     # Set the proxy URL
     if Rails.env.development?
       proxy_url = "https://#{@site.token}.queue.ngrok.io"
@@ -491,12 +482,16 @@ class SitesController < ApplicationController
     # Make the HTTP request through the proxy
     options = {
       body: params.to_json,
-      headers: { 'Content-Type' => 'application/json' } 
+      headers: get_request_headers(request)
     }
-    response = HTTParty.post("#{domain}/#{params[:path]}", options)
+    r = HTTParty.post("#{domain}/#{params[:path]}", options)
+    puts "Response headers", r.headers.inspect
+    r.headers.keys.map{|h| response.headers[h]= r.headers[h]}
+
 
     # Output the response body
-    @body = response.body
+    @body = r.body
+    render json:r.body
   end
 
   private
