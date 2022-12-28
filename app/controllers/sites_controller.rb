@@ -322,7 +322,7 @@ class SitesController < ApplicationController
                 else
                   link = @baseurl + a['href']
                 end
-              else
+              else 
                 link = @baseurl + '/' + a['href']
               end
             end
