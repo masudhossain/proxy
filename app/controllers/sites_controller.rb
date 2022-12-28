@@ -89,7 +89,7 @@ class SitesController < ApplicationController
 
 
       a = Mechanize.new { |agent|
-      # agent.request_headers = get_request_headers(request)
+        # agent.request_headers = get_request_headers(request)
         agent.user_agent_alias = 'Mac Safari' #TODO pass user's browser type
         # User Agent aliases
           # AGENT_ALIASES = {
@@ -288,16 +288,23 @@ class SitesController < ApplicationController
             link.gsub!("http:///", @baseurl) #added to test localhost entries
 
             if a['src'] != nil and a['src'] != "#"
-
               link = link.strip
+              # puts link 
               # puts a['element']
               # if a['element'] == "script"
                 # link = site_url + '?lnk=' + URI.escape(link.strip)
                 # a['src'] = link
               # else
+                # a['src'] = link
+              # end 
+
+              # check if the url is within the website or an external one. 
+              if link.include?(@baseurl)
+                link = site_url + URI.escape(link.gsub!(@baseurl, "").strip)
                 a['src'] = link
-              # end
-              
+              else 
+                a['src'] = link
+              end
             end
           end
       }
@@ -327,7 +334,15 @@ class SitesController < ApplicationController
 
           link = link.strip
           # link = site_url + '?lnk=' + URI.escape(link.strip)
-          a['href'] = link
+          # a['href'] = link
+
+          # check if the url is within the website or an external one. 
+          if link.include?(@baseurl)
+            link = site_url + URI.escape(link.gsub!(@baseurl, "").strip)
+            a['href'] = link
+          else 
+            a['href'] = link
+          end
         end
       }
 
@@ -422,6 +437,19 @@ class SitesController < ApplicationController
       # INSERT END
 
       @finaldoc = @finaldoc.gsub("</html>", "<script type='text/javascript' src='https://cdn.jsdelivr.net/gh/masudhossain/proxy-js@main/proxy.js'></script><link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/masudhossain/proxy-js@main/style.css'></link></html>")
+
+      # @finaldoc = @finaldoc.gsub("</html>", "
+      #   <script>
+      #     window.addEventListener('load', function() {
+      #       setTimeout(function() {
+      #         console.log('5 seconds have passed');
+              
+      #       }, 1000);
+      #     });
+      #   </script>
+      
+      # </html>")
+
       render :layout => false
     else
       # Since this is a JS/CSS or another weird type of file format, we will figure out what it is and then output that. 
@@ -445,11 +473,18 @@ class SitesController < ApplicationController
 
       # Output the response body
       @body = response.body
-      
       if params[:format] == "js"
         render js: @body
       elsif params[:format] == "css"
-        render css: @body
+        render css: @body, content_type: 'text/css'
+      else 
+        # render file: "#{domain}/#{params[:path]}.#{params[:format]}"
+        # redirect_to "#{domain}/#{params[:path]}.#{params[:format]}"
+        # return "#{domain}/#{params[:path]}.#{params[:format]}"
+        # respond_to do |format|
+        #   # format.html
+        #   # format.png { render file: "#{domain}/#{params[:path]}.#{params[:format]}" }
+        # end
       end
     end
   end
